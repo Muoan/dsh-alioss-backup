@@ -30,12 +30,6 @@
 http://<你的DSH地址>:<端口>/plugins/alioss-backup/config
 ```
 
-例如当前服务器：
-
-```text
-http://111.170.7.176:13140/plugins/alioss-backup/config
-```
-
 页面需要先通过 DSH 门禁登录。页面上可以：
 
 - 修改 endpoint / region / bucket / prefix / 保留天数 / 自动备份小时
