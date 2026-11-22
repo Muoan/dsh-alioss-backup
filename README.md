@@ -22,22 +22,23 @@
 
 上传默认给对象加 `private` ACL 和 `AES256` 服务端加密。
 
-## Web 配置页
+## Web 配置
 
-安装并启用插件后，打开：
+插件在 DSH 的「插件」页里直接提供配置卡片（和 dsh-access-gate 一样）：
+
+1. 侧边栏点「插件」；
+2. 点开「阿里云 OSS 备份」；
+3. 详情页的配置区可以直接修改 endpoint / region / bucket / prefix / 保留天数 / 自动备份小时；
+4. 填写或更新 AccessKey（留空则不修改）；
+5. 点「保存配置」「测试连接」「立即备份」。
+
+也保留一个独立配置页作为备用：
 
 ```text
 http://<你的DSH地址>:<端口>/plugins/alioss-backup/config
 ```
 
-页面需要先通过 DSH 门禁登录。页面上可以：
-
-- 修改 endpoint / region / bucket / prefix / 保留天数 / 自动备份小时
-- 填写或更新 AccessKey（留空则不修改）
-- 测试 OSS 连接
-- 立即备份并上传
-
-保存后的配置写在：
+两种入口读写同一份配置。保存后的配置写在：
 
 ```text
 /madata/DSH-data/storages/alioss-backup/config.json   # 600

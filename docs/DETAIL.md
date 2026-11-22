@@ -4,11 +4,15 @@
 
 ## Web 配置
 
-打开 `http://<DSH地址>:<端口>/plugins/alioss-backup/config`，需要先通过 DSH 门禁登录。
+在 DSH 侧边栏「插件」中点开「阿里云 OSS 备份」，详情页配置区可直接修改 OSS 设置、填写 AccessKey、测试连接、立即备份。
 
-页面可配置 endpoint / region / bucket / prefix / 保留天数 / 自动备份小时，填写或更新 AccessKey，测试连接，立即备份。
+独立配置页（备用）：
 
-配置保存在 `/madata/DSH-data/storages/alioss-backup/config.json`（600）；凭证保存在 `/etc/dsh/alioss.env`（600），不会写入 Git。
+```text
+http://<DSH地址>:<端口>/plugins/alioss-backup/config
+```
+
+两个入口读写同一份配置：`/madata/DSH-data/storages/alioss-backup/config.json`（600）；凭证在 `/etc/dsh/alioss.env`（600），不会写入 Git。
 
 ## 工具
 
