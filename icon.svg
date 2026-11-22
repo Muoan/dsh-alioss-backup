@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Aliyun OSS backup">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff8a00"/>
+      <stop offset="1" stop-color="#ff5a00"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="56" height="56" rx="14" fill="url(#g)"/>
+  <path d="M20 38h24a7 7 0 0 0 0-14 10 10 0 0 0-19-2 8 8 0 0 0-5 16z" fill="#fff" opacity=".96"/>
+  <path d="M32 29v16m0 0-6-6m6 6 6-6" fill="none" stroke="#ff6a00" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -1,0 +1,13 @@
+- insert:
+    - id: alioss-backup
+      name: dsh-alioss-backup
+      config:
+        endpoint: ""
+        region: ""
+        bucket: ""
+        prefix: "dsh-backup"
+        keepDays: 30
+        autoBackupHour: -1
+        credentialsFile: "/etc/dsh/alioss.env"
+        backupCommand: "/usr/local/sbin/dsh-backup"
+        backupDir: "/maapp/backup"

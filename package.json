@@ -1,0 +1,46 @@
+{
+  "name": "dsh-alioss-backup",
+  "version": "0.1.0",
+  "description": "Aliyun OSS backup plugin for DeepSeek Harness: web config, tools, private encrypted objects.",
+  "author": "Muoan",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Muoan/dsh-alioss-backup.git"
+  },
+  "homepage": "https://github.com/Muoan/dsh-alioss-backup",
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "aliyun",
+    "oss",
+    "backup"
+  ],
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "cordis.patch.yml",
+    "locale",
+    "docs",
+    "icon.svg",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "ali-oss": "^6.23.0"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}

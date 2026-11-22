@@ -1,0 +1,7 @@
+{
+  "meta": {
+    "title": "阿里云 OSS 备份",
+    "description": "把 DSH 的数据、插件、工作区和部署配置备份并上传到阿里云 OSS。",
+    "detail": "docs/DETAIL.md"
+  }
+}

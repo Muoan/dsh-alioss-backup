@@ -1,0 +1,7 @@
+{
+  "meta": {
+    "title": "Aliyun OSS backup",
+    "description": "Back up DSH data, plugins, workspace and deployment configs to Alibaba Cloud OSS.",
+    "detail": "docs/DETAIL.md"
+  }
+}
