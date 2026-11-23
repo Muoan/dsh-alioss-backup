@@ -12,12 +12,13 @@
 | `alioss_status` 工具 | 列出 OSS 上最近的备份对象 |
 | Web 配置页 | 在浏览器里修改 OSS 配置、测试连接、立即备份 |
 
-备份内容就是现有 `dsh-backup` 的四份产物：
+备份内容就是现有 `dsh-backup` 的五份产物：
 
-- `dsh-data-*.tar.gz`：DSH 数据（会话、storages、凭证、日志）
-- `dsh-plugins-*.tar.gz`：插件代码与配置
+- `dsh-data-*.tar.gz`：DSH 数据（会话、storages、凭证、日志、皮肤、Macore 状态）
+- `dsh-plugins-*.tar.gz`：`/maapp/DSH/profiles`（profile 配置 + node_modules + plugins-src）
+- `dsh-app-plugins-*.tar.gz`：`/maapp/DSH/macore`、`dsh-boot-animation`、`dsh-memory-evolve` 等 link 安装的插件源码
 - `dsh-workspace-*.tar.gz`：工作区文件
-- `dsh-configs-*.tar.gz`：PM2 / nginx / SSH / token
+- `dsh-configs-*.tar.gz`：PM2 / nginx / SSH / token / agent skills
 - `SHA256-*.txt`
 
 上传默认给对象加 `private` ACL 和 `AES256` 服务端加密。

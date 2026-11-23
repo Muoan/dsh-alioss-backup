@@ -15,7 +15,7 @@ export const inject = ['tools', 'webServer'];
 const CONFIG_PATH = '/plugins/alioss-backup/config';
 const DEFAULT_CONFIG_FILE = '/madata/DSH-data/storages/alioss-backup/config.json';
 const DEFAULT_CREDENTIALS_FILE = '/etc/dsh/alioss.env';
-const BACKUP_FILE_RE = /^dsh-(data|plugins|workspace|configs)-\d{8}-\d{6}\.tar\.gz$/;
+const BACKUP_FILE_RE = /^dsh-(data|plugins|app-plugins|workspace|configs)-\d{8}-\d{6}\.tar\.gz$/;
 const SHA_FILE_RE = /^SHA256-\d{8}-\d{6}\.txt$/;
 
 function escapeHtml(value) {
@@ -280,12 +280,13 @@ function statusTool(baseConfig) {
 }
 
 function writeStoredConfig(settings, form) {
-  const endpoint = String(form.get('endpoint') ?? '').trim().replace(/^https?:\/\//i, '').replace(/\/+$/, '');
-  const region = String(form.get('region') ?? '').trim();
-  const bucket = String(form.get('bucket') ?? '').trim();
-  const prefix = String(form.get('prefix') ?? 'dsh-backup').trim().replace(/^\/+|\/+$/g, '');
-  const keepDays = Number(form.get('keepDays') ?? 30);
-  const autoBackupHour = Number(form.get('autoBackupHour') ?? -1);
+  const get = (key) => (form instanceof URLSearchParams ? form.get(key) : form[key]);
+  const endpoint = String(get('endpoint') ?? '').trim().replace(/^https?:\/\//i, '').replace(/\/+$/, '');
+  const region = String(get('region') ?? '').trim();
+  const bucket = String(get('bucket') ?? '').trim();
+  const prefix = String(get('prefix') ?? 'dsh-backup').trim().replace(/^\/+|\/+$/g, '');
+  const keepDays = Number(get('keepDays') ?? 30);
+  const autoBackupHour = Number(get('autoBackupHour') ?? -1);
   if (!bucket || !region) throw new Error('bucket 和 region 必填');
   if (!Number.isFinite(keepDays) || keepDays < 0 || keepDays > 3650) throw new Error('保留天数必须是 0-3650');
   if (!Number.isInteger(autoBackupHour) || autoBackupHour < -1 || autoBackupHour > 23) throw new Error('自动备份小时必须是 -1 或 0-23');
@@ -293,8 +294,8 @@ function writeStoredConfig(settings, form) {
   fs.mkdirSync(path.dirname(settings.configFile), { recursive: true, mode: 0o700 });
   fs.writeFileSync(settings.configFile, JSON.stringify(values, null, 2) + '\n', { mode: 0o600 });
   fs.chmodSync(settings.configFile, 0o600);
-  const accessKeyId = String(form.get('accessKeyId') ?? '').trim();
-  const accessKeySecret = String(form.get('accessKeySecret') ?? '').trim();
+  const accessKeyId = String(get('accessKeyId') ?? '').trim();
+  const accessKeySecret = String(get('accessKeySecret') ?? '').trim();
   if (accessKeyId || accessKeySecret) {
     if (!accessKeyId || !accessKeySecret) throw new Error('AccessKey ID 与 Secret 必须同时填写');
     fs.mkdirSync(path.dirname(settings.credentialsFile), { recursive: true, mode: 0o700 });
@@ -380,30 +381,67 @@ async function readBody(req) {
   });
 }
 
+function sendJson(res, status, value) {
+  res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
+  res.end(JSON.stringify(value));
+}
+
+function configPayload(settings, csrf, message = '') {
+  return {
+    ok: true,
+    ...(message ? { message } : {}),
+    csrf,
+    credentialsConfigured: hasCredentials(settings),
+    settings: {
+      endpoint: settings.endpoint,
+      region: settings.region,
+      bucket: settings.bucket,
+      prefix: settings.prefix,
+      keepDays: settings.keepDays,
+      autoBackupHour: settings.autoBackupHour,
+      configFile: settings.configFile,
+      credentialsFile: settings.credentialsFile,
+    },
+  };
+}
+
 function createConfigHandler(baseConfig, csrf) {
   return async (req, res) => {
+    const url = new URL(req.url ?? '/', 'http://dsh.internal');
+    const wantsJson = String(req.headers.accept ?? '').includes('application/json') || url.searchParams.get('format') === 'json';
+    let isJson = false;
+    let settings = readSettings(baseConfig);
     try {
       if (req.method === 'GET') {
-        const settings = readSettings(baseConfig);
-        sendHtml(res, 200, renderPage(settings, csrf));
+        if (wantsJson) sendJson(res, 200, configPayload(settings, csrf));
+        else sendHtml(res, 200, renderPage(settings, csrf));
         return;
       }
       if (req.method !== 'POST') {
-        res.writeHead(405, { allow: 'GET, POST' });
-        res.end();
+        if (wantsJson) sendJson(res, 405, { ok: false, error: 'method not allowed' });
+        else {
+          res.writeHead(405, { allow: 'GET, POST' });
+          res.end();
+        }
         return;
       }
       const body = await readBody(req);
-      const form = new URLSearchParams(body);
-      if (form.get('csrf') !== csrf) {
-        sendHtml(res, 403, renderPage(readSettings(baseConfig), csrf, '', 'CSRF 校验失败，请刷新页面重试'));
+      isJson = String(req.headers['content-type'] ?? '').includes('application/json');
+      let payload;
+      if (isJson) {
+        try { payload = JSON.parse(body || '{}'); } catch { throw new Error('JSON 格式错误'); }
+      } else {
+        payload = Object.fromEntries(new URLSearchParams(body));
+      }
+      if (String(payload.csrf ?? '') !== csrf) {
+        if (wantsJson || isJson) sendJson(res, 403, { ok: false, error: 'CSRF 校验失败，请刷新页面重试' });
+        else sendHtml(res, 403, renderPage(settings, csrf, '', 'CSRF 校验失败，请刷新页面重试'));
         return;
       }
-      const action = form.get('action') ?? 'save';
-      let settings = readSettings(baseConfig);
+      const action = payload.action ?? 'save';
       let message = '';
       if (action === 'save') {
-        writeStoredConfig(settings, form);
+        writeStoredConfig(settings, payload);
         settings = readSettings(baseConfig);
         message = `已保存：${settings.bucket}/${settings.prefix}/，保留 ${settings.keepDays} 天，自动备份 ${settings.autoBackupHour < 0 ? '关闭' : `${settings.autoBackupHour}:00`}。手动备份工具立即生效；自动备份需重启 DSH。`;
       } else if (action === 'test') {
@@ -417,9 +455,12 @@ function createConfigHandler(baseConfig, csrf) {
       } else {
         throw new Error(`未知操作：${action}`);
       }
-      sendHtml(res, 200, renderPage(settings, csrf, message));
+      if (wantsJson || isJson) sendJson(res, 200, configPayload(settings, csrf, message));
+      else sendHtml(res, 200, renderPage(settings, csrf, message));
     } catch (error) {
-      sendHtml(res, 500, renderPage(readSettings(baseConfig), csrf, '', error instanceof Error ? error.message : String(error)));
+      const text = error instanceof Error ? error.message : String(error);
+      if (wantsJson || isJson) sendJson(res, 500, { ok: false, error: text });
+      else sendHtml(res, 500, renderPage(readSettings(baseConfig), csrf, '', text));
     }
   };
 }
